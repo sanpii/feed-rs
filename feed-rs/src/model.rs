@@ -5,6 +5,7 @@ use mime::Mime;
 use crate::parser::util::timestamp_rfc2822_lenient;
 #[cfg(test)]
 use crate::parser::util::timestamp_rfc3339_lenient;
+use std::time::Duration;
 
 /// Combined model for a syndication feed (i.e. RSS1, RSS 2, Atom, JSON Feed)
 ///
@@ -289,6 +290,9 @@ pub struct Entry {
     pub source: Option<String>,
     /// Atom (optional): Conveys information about rights, e.g. copyrights, held in and over the feed.
     pub rights: Option<Text>,
+
+    /// RSS extension for MediaRSS - https://www.rssboard.org/media-rss
+    pub media_group: Vec<MediaContent>,
 }
 
 impl Default for Entry {
@@ -306,6 +310,7 @@ impl Default for Entry {
             published: None,
             source: None,
             rights: None,
+            media_group: Vec::new(),
         }
     }
 }
@@ -648,6 +653,70 @@ impl Link {
         self.title = Some(title.to_owned());
         self
     }
+}
+
+/// Represents a "media:content" item from the RSS Media spec
+#[derive(Debug, PartialEq)]
+pub struct MediaContent {
+    /// The direct URL
+    pub uri: Option<String>,
+    /// Number of bytes
+    pub length: Option<u64>,
+    /// Standard MIME type
+    pub content_type: Option<Mime>,
+    /// The type of object (image | audio | video | document | executable)
+    pub medium: Option<String>,
+    /// Whether this is the default object in the media group
+    pub default: Option<bool>,
+    /// Whether the object is a sample or the full version of the object (sample | full | nonstop). Default value is "full".
+    pub expression: String,
+    /// Bitrate in kilobits per second
+    pub bitrate_kbps: Option<u32>,
+    /// Number of frames per second
+    pub framerate: Option<u32>,
+    /// Sampling rate
+    pub samplingrate_khz: Option<f32>,
+    /// Number of audio channels
+    pub audio_channels: Option<u32>,
+    /// Duration in seconds
+    pub duration_secs: Option<u32>,
+    /// Height and width
+    pub height: Option<u32>,
+    pub width: Option<u32>,
+    /// The primary language encapsulated in the media object
+    pub language: Option<String>,
+}
+
+/// Aggregates the "media:" optional elements
+#[derive(Debug, PartialEq)]
+pub struct MediaOpt {
+    /// The permissible audience
+    pub rating: Option<MediaRating>,
+    /// The title of the particular media object
+    pub title: Option<Text>,
+    /// Short description describing the media object
+    pub description: Option<Text>,
+    /// Highly relevant keywords describing the media object
+    pub keywords: Option<String>,
+    /// Allows particular images to be used as representative images for the media object
+    pub thumbnails: Vec<(Image, Duration)>,
+    /// Allows a taxonomy to be set that gives an indication of the type of media content, and its particular contents
+    pub categories: Vec<Category>,
+    /// Hashes of the binary media file
+    pub hashes: Vec<MediaHash>,
+    /// Allows the media object to be accessed through a web browser media player console
+    pub player: Option<MediaPlayer>,
+    /// Notable entity and the contribution to the creation of the media object
+    pub credits: Vec<MediaCredit>,
+    /// Copyright information for the media object
+    pub copyright: Option<Link>,
+    /// Text transcript, closed captioning or lyrics of the media content.
+    pub text: Vec<MediaText>,
+    /// Restrictions to be placed on the aggregator rendering the media in the feed
+    pub restrictions: Vec<MediaRestriction>,
+    /// Community related content such as view count, ratings and tags
+    pub community: Option<MediaCommunity>,
+
 }
 
 /// Represents an author, contributor etc.
